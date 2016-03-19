@@ -1,7 +1,6 @@
 ---
 # defaults file for ansible-proxmox-provision
 proxmox_provision_hosts: []
-proxmox_provision_hosts: "{{ groups.proxmox_lxc_guests }}"
 proxmox_provision_memory: "512"
 proxmox_provision_password: lxctemplate123
 proxmox_provision_storage: /var/lib/vz/template/cache
