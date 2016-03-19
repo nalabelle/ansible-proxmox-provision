@@ -1,12 +1,21 @@
 ---
 # tasks file for ansible-proxmox-provision
+# Would use proxmox module from extras, but doesn't support ssh auth and I don't want to sling around passwords
 
-- name: create a machine (only if does not exist)
-  debug: var={{item}}
-#  lxc_container:
-#    clone_name: "{{item}}"
-#    name: "{{template_name}}"
-#    backing_store: aufs
-#    clone_snapshot: true
-#    state: stopped
+- name: Get information
+  shell: pct config {{hostvars[item]['pve_id']}}
+  register: pct_config_01
+  changed_when: '"does not exist" in pct_config_01.stderr'
+  failed_when: (not "amd64" in pct_config_01.stdout) and (not "does not exist" in pct_config_01.stderr)
   with_items: "{{proxmox_provision_hosts}}"
+
+- name: Create a containter from a template
+  shell: |
+         pct create {{hostvars[item['item']]['pve_id']}} {{ proxmox_provision_storage }}/{{ proxmox_provision_template_file }} \
+         -description "{{hostvars[item['item']]['inventory_hostname_short']}}" \
+         -hostname {{item['item']}} \
+         -memory {{ proxmox_provision_memory }} \
+         -net0 name=eth0,ip=dhcp,ip6=dhcp \
+         -password {{ proxmox_provision_password }}
+  when: "{{item['changed']}}"
+  with_items: "{{pct_config_01['results']}}"
