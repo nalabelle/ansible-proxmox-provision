@@ -1,0 +1,12 @@
+---
+# tasks file for ansible-proxmox-provision
+
+- name: create a machine (only if does not exist)
+  debug: var={{item}}
+#  lxc_container:
+#    clone_name: "{{item}}"
+#    name: "{{template_name}}"
+#    backing_store: aufs
+#    clone_snapshot: true
+#    state: stopped
+  with_items: "{{proxmox_provision_hosts}}"
