@@ -19,3 +19,9 @@
          -password {{ proxmox_provision_password }}
   when: "{{item['changed']}}"
   with_items: "{{pct_config_01['results']}}"
+
+- name: Create a containter from a template
+  shell: |
+         pct start {{hostvars[item['item']]['pve_id']}}
+  when: "{{item['changed']}}"
+  with_items: "{{pct_config_01['results']}}"
