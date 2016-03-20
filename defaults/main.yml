@@ -6,3 +6,4 @@ proxmox_provision_password: lxctemplate123
 proxmox_provision_storage: /var/lib/vz/template/cache
 proxmox_provision_template_file: "{{lxctemplate_file}}" #from ansible-template
 proxmox_provision_bridge: vmbr0
+proxmox_regex_hostname: true

@@ -2,30 +2,68 @@
 # tasks file for ansible-proxmox-provision
 # Would use proxmox module from extras, but doesn't support ssh auth and I don't want to sling around passwords
 
-- name: Get information
-  shell: pct config {{hostvars[item]['pve_id']}}
-  register: pct_config_01
-  changed_when: '"does not exist" in pct_config_01.stderr'
-  failed_when: (not "amd64" in pct_config_01.stdout) and (not "does not exist" in pct_config_01.stderr)
-  with_items: "{{proxmox_provision_hosts}}"
+- block:
+  - name: Get information
+    shell: pct config {{hostvars[item]['inventory_hostname_short'] | regex_replace('[A-Za-z-_.]', '')}}
+    register: pct_config_01
+    changed_when: '"does not exist" in pct_config_01.stderr'
+    failed_when: (not "amd64" in pct_config_01.stdout) and (not "does not exist" in pct_config_01.stderr)
+    with_items: "{{proxmox_provision_hosts}}"
 
-- name: Create a containter from a template
-  shell: |
-         pct create {{hostvars[item['item']]['pve_id']}} {{ proxmox_provision_storage }}/{{ proxmox_provision_template_file }} \
-         -description "{{hostvars[item['item']]['inventory_hostname_short']}}" \
-         -hostname {{item['item']}} \
-         -memory {{ proxmox_provision_memory }} \
-         -net0 name=eth0,ip=dhcp,ip6=dhcp,bridge={{ proxmox_provision_bridge }} \
-         -password {{ proxmox_provision_password }}
-  when: "{{item['changed']}}"
-  with_items: "{{pct_config_01['results']}}"
+  - name: Create a containter from a template (generated ID)
+    shell: |
+           pct create {{hostvars[item['item']]['inventory_hostname_short'] | regex_replace('[A-Za-z-_.]', '')}} \
+           {{ proxmox_provision_storage }}/{{ proxmox_provision_template_file }} \
+           -description "{{hostvars[item['item']]['inventory_hostname_short']}}" \
+           -hostname {{item['item']}} \
+           -memory {{ proxmox_provision_memory }} \
+           -net0 name=eth0,ip=dhcp,ip6=dhcp,bridge={{ proxmox_provision_bridge }} \
+           -password {{ proxmox_provision_password }}
+    when: "{{item['changed']}}"
+    with_items: "{{pct_config_01['results']}}"
 
-- name: Start the container
-  shell: |
-         pct start {{hostvars[item['item']]['pve_id']}}
-  when: "{{item['changed']}}"
-  with_items: "{{pct_config_01['results']}}"
 
-- set_fact:
-    proxmox_provision_created: true
-  when: pct_config_01.changed
+  - name: Start the container
+    shell: |
+           pct start {{hostvars[item['item']]['inventory_hostname_short'] | regex_replace('[A-Za-z-_.]', '')}}
+    when: "{{item['changed']}}"
+    with_items: "{{pct_config_01['results']}}"
+
+  - set_fact:
+      proxmox_provision_created: true
+    when: pct_config_01.changed
+
+  when: "{{proxmox_regex_hostname}}"
+
+- block:
+  - name: Get information
+    shell: pct config {{hostvars[item]['pve_id']}}
+    register: pct_config_01
+    changed_when: '"does not exist" in pct_config_01.stderr'
+    failed_when: (not "amd64" in pct_config_01.stdout) and (not "does not exist" in pct_config_01.stderr)
+    with_items: "{{proxmox_provision_hosts}}"
+
+  - name: Create a containter from a template (named ID)
+    shell: |
+           pct create {{hostvars[item['item']]['pve_id']}} {{ proxmox_provision_storage }}/{{ proxmox_provision_template_file }} \
+           -description "{{hostvars[item['item']]['inventory_hostname_short']}}" \
+           -hostname {{item['item']}} \
+           -memory {{ proxmox_provision_memory }} \
+           -net0 name=eth0,ip=dhcp,ip6=dhcp,bridge={{ proxmox_provision_bridge }} \
+           -password {{ proxmox_provision_password }}
+    when: "{{item['changed']}}"
+    with_items: "{{pct_config_01['results']}}"
+
+  - name: Start the container
+    shell: |
+           pct start {{hostvars[item['item']]['pve_id']}}
+    when: "{{item['changed']}}"
+    with_items: "{{pct_config_01['results']}}"
+
+  - set_fact:
+      proxmox_provision_created: true
+    when: pct_config_01.changed
+
+  when: not "{{proxmox_regex_hostname}}"
+
+
