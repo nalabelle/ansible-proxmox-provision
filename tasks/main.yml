@@ -15,7 +15,7 @@
          -description "{{hostvars[item['item']]['inventory_hostname_short']}}" \
          -hostname {{item['item']}} \
          -memory {{ proxmox_provision_memory }} \
-         -net0 name=eth0,ip=dhcp,ip6=dhcp \
+         -net0 name=eth0,ip=dhcp,ip6=dhcp,bridge={{ proxmox_provision_bridge }} \
          -password {{ proxmox_provision_password }}
   when: "{{item['changed']}}"
   with_items: "{{pct_config_01['results']}}"
