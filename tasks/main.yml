@@ -20,8 +20,12 @@
   when: "{{item['changed']}}"
   with_items: "{{pct_config_01['results']}}"
 
-- name: Create a containter from a template
+- name: Start the container
   shell: |
          pct start {{hostvars[item['item']]['pve_id']}}
   when: "{{item['changed']}}"
   with_items: "{{pct_config_01['results']}}"
+
+- set_fact:
+    proxmox_provision_created: true
+  when: pct_config_01.changed
