@@ -33,7 +33,7 @@
       proxmox_provision_created: true
     when: pct_config_01.changed
 
-  when: "{{proxmox_regex_hostname}}"
+  when: proxmox_regex_hostname
 
 - block:
   - name: Provision
@@ -67,6 +67,6 @@
       proxmox_provision_created: true
     when: pct_config_01.changed
 
-  when: not "{{proxmox_regex_hostname}}"
+  when: not proxmox_regex_hostname
 
 
